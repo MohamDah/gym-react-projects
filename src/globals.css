@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+* {
+  font-family: sans-serif;
+}
+
+body {
+  background-color: #fafafa;
+}
+
+.shadow-custom {
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.50);
+}
