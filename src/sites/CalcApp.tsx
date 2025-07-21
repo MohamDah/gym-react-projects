@@ -46,9 +46,6 @@ export default function CalcApp() {
   }
 
 
-  function parseDisplay() {
-    
-  }
   
 
   return (
