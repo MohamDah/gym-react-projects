@@ -1,68 +1,92 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+
 
 export default function CalcApp() {
-  const [eqString, setEqString] = useState("");
-  const [lastOperand, setLastOperand] = useState("")
+  const [dispValue, setDispValue] = useState("0")
+  const [currValue, setCurrValue] = useState(0);
+  const [prevValue, setPrevValue] = useState(0);
+  const [currOperator, setCurrOperator] = useState<string>();
+  const [resetInput, setResetInput] = useState<boolean>(false);
+  const [error, setError] = useState("");
 
-  const isDigited = () => eqString.length === 0 || /[+*/s]$/.test(eqString);
-  const isSigns = () => !!(eqString)?.match(/[^0-9.]/)?.length;
-  const getAfterSign = () => eqString.split(/[+*/-]/).at(-1)!;
-
-
-  function solveEquation() {
-    setEqString(`${eval(eqString)}`);
+  function inputDigit(digit: string) {
+    let newDispValue = dispValue
+    if (resetInput) {
+      newDispValue = String(digit)
+      setDispValue(newDispValue)
+      setResetInput(false)
+    } else {
+      newDispValue = newDispValue === "0" ? String(digit) : newDispValue + digit
+      setDispValue(newDispValue)
+    }
+    setCurrValue(parseFloat(newDispValue))
   }
 
-  function handleClick(action: string) {
-    if (action === "ac") {
-      setEqString("");
-      return;
+  function inputDecimal() {
+    if (resetInput) {
+      setDispValue("0.")
+      setResetInput(false)
+    } else if (!dispValue.includes(".")) {
+      setDispValue(dispValue + ".")
     }
-
-
-    // if (action === "0" && isDigited()) return;
-
-
-    if (/[+*/-]/.test(action)) {
-      if (/[+*/-]$/.test(eqString)) {
-        setEqString(prev => prev.slice(0, -1) + action);
-      } else {
-        // Calculate result before adding operator
-        solveEquation();
-
-        setEqString(prev => prev + action);
-
-      }
-      return;
-    }
-
-    setEqString(prev => prev + action);
   }
 
-  useLayoutEffect(() => {
-    // if (/^0+$/.test(eqString)) {
-    //   setEqString("0");
-    // }
-    if (/^0+./.test(eqString)) {
-      console.log(eqString)
-      setEqString(prev => prev.replace(/^0+/g, ""))
+  function setOperation(operator: string) {
+    let scopeCurrValue = currValue;
+    if (currOperator) {
+      const calcRes = calculate();
+      if (!calcRes) return;
+      scopeCurrValue = calcRes;
     }
-  }, [eqString]);
 
-  // TODO: Handle periods edgecase
-
-
-  function parseDisplay(str: string) {
-    return str
+    setPrevValue(scopeCurrValue);
+    setCurrOperator(operator);
+    setResetInput(true);
   }
 
+  function calculate() {
+    if (!currOperator) return;
 
-  // function switchSign() {
-  //   if (isDigited()) {
+    let result = 0;
+    switch (currOperator) {
+      case "+":
+        result = prevValue + currValue;
+        break;
+      case "-":
+        result = prevValue - currValue;
+        break;
+      case "*":
+        result = prevValue * currValue;
+        break;
+      case "/":
+        if (currValue === 0) {
+          setError("Error: Division by zero");
+          return;
+        }
+        result = prevValue / currValue;
+        break;
+    }
 
-  //   }
-  // }
+    setDispValue(String(result))
+    setCurrValue(result);
+    setPrevValue(0);
+    setCurrOperator(undefined);
+    setResetInput(true);
+    return result;
+  }
 
+  function clear() {
+    setDispValue("0")
+    setCurrValue(0);
+    setPrevValue(0);
+    setCurrOperator(undefined);
+    setResetInput(false);
+  }
+
+  useEffect(() => {
+    setError("");
+  }, [currValue, currOperator]);
 
   return (
     <main className="flex flex-col items-center pt-16 text-4xl">
@@ -70,33 +94,38 @@ export default function CalcApp() {
         <div className="outline outline-[#202021]">
           <div className="flex flex-col items-end p-3 text-white text-5xl overflow-hidden">
             {/* <span>{parseDisplay() || "0"}</span> */}
-            <span className={`text-base text-gray-400 mb-2 ${!isSigns() ? "invisible" : ""}`}>{parseDisplay(eqString) || "0"}</span>
-            <span>{parseDisplay(getAfterSign()) || "0"}</span>
+            {/* <span className={`text-base text-gray-400 mb-2 ${!isSigns() ? "invisible" : ""}`}>{parseDisplay(eqString) || "0"}</span>
+            <span>{parseDisplay(getAfterSign()) || "0"}</span> */}
+            {
+              !error
+                ? <span className="h-12">{dispValue}</span>
+                : <span className="h-12 text-red-400 text-5xl">{error}</span>
+            }
           </div>
           <div className="grid grid-cols-4 grid-rows-5 gap-1 *:bg-[#444444] *:hover:bg-[#323232] *:py-5 *:rounded-md text-white *:hover:scale-[101%] *:cursor-pointer">
-            <button onClick={() => handleClick("ac")} className="!bg-[#323232] text-white hover:!bg-[#444444]">AC</button>
+            <button onClick={clear} className="!bg-[#323232] text-white hover:!bg-[#444444]">AC</button>
             <button onClick={() => null} className="!bg-[#323232] text-white hover:!bg-[#444444]">+/-</button>
             <button className="!bg-[#323232] text-white hover:!bg-[#444444]">%</button>
-            <button onClick={() => handleClick("/")} className="!bg-[#323232] text-white hover:!bg-[#444444]">/</button>
+            <button onClick={() => setOperation("/")} className="!bg-[#323232] text-white hover:!bg-[#444444]">/</button>
 
-            <button onClick={() => handleClick("7")}>7</button>
-            <button onClick={() => handleClick("8")}>8</button>
-            <button onClick={() => handleClick("9")}>9</button>
-            <button onClick={() => handleClick("*")} className="!bg-[#323232] text-white hover:!bg-[#444444]">X</button>
+            <button onClick={() => inputDigit("7")}>7</button>
+            <button onClick={() => inputDigit("8")}>8</button>
+            <button onClick={() => inputDigit("9")}>9</button>
+            <button onClick={() => setOperation("*")} className="!bg-[#323232] text-white hover:!bg-[#444444]">X</button>
 
-            <button onClick={() => handleClick("4")}>4</button>
-            <button onClick={() => handleClick("5")}>5</button>
-            <button onClick={() => handleClick("6")}>6</button>
-            <button onClick={() => handleClick("-")} className="!bg-[#323232] text-white hover:!bg-[#444444]">-</button>
+            <button onClick={() => inputDigit("4")}>4</button>
+            <button onClick={() => inputDigit("5")}>5</button>
+            <button onClick={() => inputDigit("6")}>6</button>
+            <button onClick={() => setOperation("-")} className="!bg-[#323232] text-white hover:!bg-[#444444]">-</button>
 
-            <button onClick={() => handleClick("1")}>1</button>
-            <button onClick={() => handleClick("2")}>2</button>
-            <button onClick={() => handleClick("3")}>3</button>
-            <button onClick={() => handleClick("+")} className="!bg-[#323232] text-white hover:!bg-[#444444]">+</button>
+            <button onClick={() => inputDigit("1")}>1</button>
+            <button onClick={() => inputDigit("2")}>2</button>
+            <button onClick={() => inputDigit("3")}>3</button>
+            <button onClick={() => setOperation("+")} className="!bg-[#323232] text-white hover:!bg-[#444444]">+</button>
 
-            <button onClick={() => handleClick("0")} className="col-span-2">0</button>
-            <button onClick={() => handleClick(".")}>.</button>
-            <button onClick={solveEquation} className="!bg-[#323232] text-white hover:!bg-[#444444]">=</button>
+            <button onClick={() => inputDigit("0")} className="col-span-2">0</button>
+            <button onClick={inputDecimal}>.</button>
+            <button onClick={calculate} className="!bg-[#323232] text-white hover:!bg-[#444444]">=</button>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ type TodoItem = {
 export default function TodoApp() {
   const [todos, setTodos] = useState<TodoItem[]>(() => JSON.parse(localStorage.getItem("todos") || "[]"));
   const [newTodo, setNewTodo] = useState("")
+  
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     if (!newTodo.trim()) return
