@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-
-
 export default function CalcApp() {
   const [dispValue, setDispValue] = useState("0")
   const [currValue, setCurrValue] = useState(0);
@@ -84,6 +82,26 @@ export default function CalcApp() {
     setResetInput(false);
   }
 
+  function swapSign() {
+    if (dispValue[0] === "-") {
+      setCurrValue(Math.abs(currValue))
+      setDispValue(Math.abs(currValue).toString())
+    } else {
+      setCurrValue(0 - currValue)
+      setDispValue((0 - currValue).toString())
+    }
+  }
+
+  function doPercent() {
+    if (resetInput) {
+      setCurrValue(currValue / 100)
+      setDispValue((currValue / 100).toString())
+    } else {
+      setCurrValue(0)
+      setDispValue("0")
+    }
+  }
+
   useEffect(() => {
     setError("");
   }, [currValue, currOperator]);
@@ -96,6 +114,7 @@ export default function CalcApp() {
             {/* <span>{parseDisplay() || "0"}</span> */}
             {/* <span className={`text-base text-gray-400 mb-2 ${!isSigns() ? "invisible" : ""}`}>{parseDisplay(eqString) || "0"}</span>
             <span>{parseDisplay(getAfterSign()) || "0"}</span> */}
+            <span className={`text-base text-gray-400 mb-2 h-6`}>{!!currOperator && `${prevValue}${currOperator}`}</span>
             {
               !error
                 ? <span className="h-12">{dispValue}</span>
@@ -104,8 +123,8 @@ export default function CalcApp() {
           </div>
           <div className="grid grid-cols-4 grid-rows-5 gap-1 *:bg-[#444444] *:hover:bg-[#323232] *:py-5 *:rounded-md text-white *:hover:scale-[101%] *:cursor-pointer">
             <button onClick={clear} className="!bg-[#323232] text-white hover:!bg-[#444444]">AC</button>
-            <button onClick={() => null} className="!bg-[#323232] text-white hover:!bg-[#444444]">+/-</button>
-            <button className="!bg-[#323232] text-white hover:!bg-[#444444]">%</button>
+            <button onClick={swapSign} className="!bg-[#323232] text-white hover:!bg-[#444444]">+/-</button>
+            <button onClick={doPercent} className="!bg-[#323232] text-white hover:!bg-[#444444]">%</button>
             <button onClick={() => setOperation("/")} className="!bg-[#323232] text-white hover:!bg-[#444444]">/</button>
 
             <button onClick={() => inputDigit("7")}>7</button>
